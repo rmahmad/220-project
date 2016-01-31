@@ -88,7 +88,7 @@ $(document).ready(function() {
       .attr('class', 'd3-tip')
       .offset([-10, 0])
       .html(function(d) {
-        return "<strong>App:</strong> <span style='color:red'>" + data['apps'][d.app_id]['name'] + "</span>";
+        return "<strong>App:</strong> <span style='color:red'>" + data['apps'][d.app_id-1]['name'] + "</span>";
       })
     svg.call(tip)
 
