@@ -22,7 +22,7 @@ $(document).ready(function() {
     .orient("left");
 
   var max = {x: 1800, y: 600}
-  var imgUrl = "http://localhost:8000/160130-170718482987_-1680_1200.jpg";
+  var imgUrl = "../assets/PICTURE.jpg";
 
   var svg = d3.select("body").append("svg")
     .attr("width", width + margin.left + margin.right)
