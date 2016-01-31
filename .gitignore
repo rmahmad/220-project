@@ -1,1 +1,3 @@
 contributors.txt
+data/*
+*.DS_Store
