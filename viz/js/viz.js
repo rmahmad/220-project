@@ -26,7 +26,7 @@ $(document).ready(function() {
 
   var svg = d3.select("body").append("svg")
     .attr("width", width + margin.left + margin.right)
-    .attr("height", height + margin.top + margin.bottom);
+    .attr("height", height + margin.top + margin.bottom + 100);
 
   svg.append("defs")
       .append("pattern")
@@ -56,6 +56,21 @@ $(document).ready(function() {
   var startTimeVal = 0;
   var endTimeVal = Date.now() / 1000;
 
+  // container for main compressed timeline
+  var cTimeline = svg.append("g")
+      .attr("transform", "translate(" + 0 + "," + (max.y + 30) + ")")//start @ x = 0, y = 5
+      .attr("width", width)
+      .attr("height", 42)
+      .attr("class", "cTimeline");
+
+  //background rectangle for compressed timeline
+  var clifford = cTimeline.append("rect")
+      .attr("x", 0)
+      .attr("y", 0)
+      .attr("width", width)
+      .attr("height", 42)
+      .attr('class', 'clifford')
+      .style("fill", "red");
 
   d3.json("../data/extract.json", function(error, data) {
     if (error) throw error;
