@@ -93,6 +93,8 @@ $(document).ready(function() {
 
     draw(data, filteredClicks, data['images'], min, max);
 
+    drawTimelineAxis(min, max);
+
     $("#BUTTON").on("click", function() {
       draw(data, filteredClicks, data['images'], $("#startTime").val(), $("#endTime").val());
     });
@@ -103,6 +105,7 @@ $(document).ready(function() {
   //----------------------------------------//
   function draw(data, filteredClicks, images, startTime, endTime) {
     main.selectAll(".dot").remove();
+    main.selectAll(".graph-axis").remove();
 
     var tip = d3.tip()
       .attr('class', 'd3-tip')
@@ -136,7 +139,7 @@ $(document).ready(function() {
         .attr("y", 0);
     console.log(scaleX(1500));
     main.append("g")
-      .attr("class", "x axis")
+      .attr("class", "axis graph-axis")
       .attr("transform", "translate(0," + height + ")")
       .call(xAxis)
       .append("text")
@@ -145,7 +148,7 @@ $(document).ready(function() {
       .attr("y", -6);
 
     main.append("g")
-      .attr("class", "y axis")
+      .attr("class", "axis graph-axis")
       .call(yAxis)
       .append("text")
       .attr("class", "label")
@@ -170,17 +173,14 @@ $(document).ready(function() {
       .on('mouseover', tip.show)
       .on('mouseout', tip.hide);
 
-    drawTimelineAxis();
   }
 
   // -------------------------------------------------
   // draw main timeline axis
   // -------------------------------------------------
-  function drawTimelineAxis(){
-    var t1 = new Date($("#startTime").val()*1000);
-    var t2 = new Date($("#endTime").val()*1000);
-    //var t2 = new Date(t1.getTime());
-    //t2.setDate(t2.getDate() + 1);
+  function drawTimelineAxis(min, max){
+    var t1 = new Date(min*1000);
+    var t2 = new Date(max*1000);
 
     var xScale = d3.time.scale()
       .domain([t1, t2])
@@ -191,7 +191,7 @@ $(document).ready(function() {
       .orient("bottom");
 
     timeline.append("g") //redraw the timeline axis
-      .attr("class", "x axis")
+      .attr("class", "time axis")
       .attr("transform", "translate("+0+"," + barHeight + ")")
       .call(xAxis)
       .selectAll("text") //move text for tick marks
@@ -199,6 +199,16 @@ $(document).ready(function() {
       .attr("x", 0)
       .style("text-anchor", "center")
       .style("fill", "#666");
+  }
+
+  
+  //----------------------------------------//
+  //  Draw the Timeline with BARS           //
+  //----------------------------------------//
+  function drawTimeline() {
+
+
+
   }
 
 
