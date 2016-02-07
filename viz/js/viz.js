@@ -93,7 +93,7 @@ $(document).ready(function() {
 
     draw(data, filteredClicks, data['images'], min, max);
 
-    drawTimelineAxis(min, max);
+    drawTimeline(min, max);
 
     $("#BUTTON").on("click", function() {
       draw(data, filteredClicks, data['images'], $("#startTime").val(), $("#endTime").val());
@@ -175,10 +175,39 @@ $(document).ready(function() {
 
   }
 
+  //----------------------------------------//
+  //  Draw the Timeline with BARS           //
+  //----------------------------------------//
+  function drawTimeline(timeBegin, timeEnd) {
+    drawTimelineAxis(timeBegin, timeEnd);
+
+    var timeScale = d3.scale.linear()
+      .domain([timeBegin, timeEnd])
+      .range([0, width]);
+
+    //timeline.selectAll("g").remove();
+
+		cbars = timeline.append("g").selectAll(".cbar")
+			.data(filteredClicks);
+
+		cbars.enter().append("rect")
+			.attr("class", 'cbar')
+			.attr("x", function(d) {return timeScale(d.time);})
+			.attr("y", 0)
+			.attr("width", function(d) {return ( 2 )}) 
+			.attr("height", barHeight)
+			.style("fill", function(d) {return color(d.app_id);});
+			//.on("mouseover", function(d){ barMouseover(d); })
+			//.on("mousemove", function(d){ barMousemove(); })
+			//.on("mouseout", function(d){ barMouseout(); });
+
+		cbars.exit().remove();
+  }
+
   // -------------------------------------------------
   // draw main timeline axis
   // -------------------------------------------------
-  function drawTimelineAxis(min, max){
+  function drawTimelineAxis(min, max) {
     var t1 = new Date(min*1000);
     var t2 = new Date(max*1000);
 
@@ -192,7 +221,7 @@ $(document).ready(function() {
 
     timeline.append("g") //redraw the timeline axis
       .attr("class", "time axis")
-      .attr("transform", "translate("+0+"," + barHeight + ")")
+      .attr("transform", "translate("+0+"," + (barHeight + 1) + ")")
       .call(xAxis)
       .selectAll("text") //move text for tick marks
       .attr("y", 12)
@@ -202,15 +231,6 @@ $(document).ready(function() {
   }
 
   
-  //----------------------------------------//
-  //  Draw the Timeline with BARS           //
-  //----------------------------------------//
-  function drawTimeline() {
-
-
-
-  }
-
 
 
 
