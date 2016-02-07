@@ -41,3 +41,11 @@ body {
   top: 100%;
   left: 0;
 }
+
+.brush {
+  stroke: #f00;
+  stroke-width: 2px;
+  fill: #f00;
+  fill-opacity: .25;
+  shape-rendering: crispEdges;
+}

@@ -202,6 +202,8 @@ $(document).ready(function() {
 			//.on("mouseout", function(d){ barMouseout(); });
 
 		cbars.exit().remove();
+
+    setupBrush(timeScale);
   }
 
   // -------------------------------------------------
@@ -230,58 +232,48 @@ $(document).ready(function() {
       .style("fill", "#666");
   }
 
-  
-
-
-
-  
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
   // -------------------------------------------------
   // setup brush elemetns
   // -------------------------------------------------
-  function setupBrush(){
-    //get start and end time of the day we are viewing
-    selectedDate = $("#datepicker").datepicker("getDate");
-    timeBegin = Date.parse(selectedDate)/1000.0 //+ selectedDate.getTimezoneOffset()*60.0;
-    timeEnd = timeBegin + 24*60*60; //show one day of data
-
-    //LINEAR TIME SCALE for selected day <-> page width
-    var x = d3.scale.linear()
-      .domain([timeBegin, timeEnd])
-      .range([m[3],w]);
-
-    //svg brush elements
+  function setupBrush(scale){
+    // svg brush elements
+    //
     brush = d3.svg.brush()
-      .x(x) //xscale of the brush is the x scale of the chart
-      // .extent([timeBegin, timeEnd]) //extent is current time range
-      .on("brush", updateBrushed) //<--- on BRUSH event, only expanded timeline is redrawn
-      .on("brushend",brushEnd); //<-- on BRUSHEND, expanded redrawn to date frame if brush is empty
+      .x(scale) //xscale of the brush is the x scale of the chart
+      //.on("brush", updateBrushed) //<--- on BRUSH event, only expanded timeline is redrawn
+      //.on("brushend",brushEnd); //<-- on BRUSHEND, expanded redrawn to date frame if brush is empty
 
-    var area = main.append("g")
+    var area = timeline.append("g")
       .attr("class", "brush")
       .call(brush)
       .selectAll("rect")
-      .attr("y", 4)
+      .attr("y", 0)
       .attr("height", barHeight + 2);
   }
+  
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
   // -------------------------------------------------
-  // redraws expanded based on brush
+  // redraws plotted points based on brush
   // -------------------------------------------------
   function updateBrushed(){
 
