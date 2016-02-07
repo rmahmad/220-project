@@ -13,7 +13,7 @@ $(document).ready(function() {
     .range([0, 1800]);
 
   var scaleY = d3.scale.linear()
-    .domain([0,1200])
+    .domain([0,1500])
     .range([600, 0]);
 
   var color = d3.scale.category10();
@@ -27,34 +27,22 @@ $(document).ready(function() {
     .orient("left");
 
   var max = {x: 1800, y: 600}
-  var imgUrl = "../assets/PICTURE.jpg";
 
   // Draw Containers
   //
-  var main = d3.select("body").append("svg")
+  var svg = d3.select("body").append("svg")
     .attr("width", width + margin.left + margin.right)
     .attr("height", height + margin.top + margin.bottom + timelineHeight + barHeight);
 
-  main.append("defs")
-    .append("pattern")
-    .attr("id", "image")
-    .attr('patternUnits', 'userSpaceOnUse')
-    .attr('patternTransform', 'translate(40, 20)')
-    .attr("width", max.x)
-    .attr("height", max.y)
-    .append("image")
-    .attr("xlink:href", imgUrl)
-    .attr("width", max.x)
-    .attr("height", max.y);
+  svg.append("rect")
+      .attr("x", "40")
+      .attr("y", "20")
+      .attr("width", max.x)
+      .attr("height", max.y)
+      .attr("fill", "url(#image)");
 
-  main.append("rect")
-    .attr("x", "40")
-    .attr("y", "20")
-    .attr("width", max.x)
-    .attr("height", max.y)
-    .attr("fill", "url(#image)");
-
-  main = main.append("g")
+  main = svg.append("g")
+    .attr("id", "graph")
     .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
   // container for main compressed timeline
@@ -103,17 +91,17 @@ $(document).ready(function() {
     $("#startTime").val(Math.floor(min));
     $("#endTime").val(Math.ceil(max));
 
-    draw(data, filteredClicks);
+    draw(data, filteredClicks, data['images'], min, max);
 
     $("#BUTTON").on("click", function() {
-      draw(data, filteredClicks);
+      draw(data, filteredClicks, data['images'], $("#startTime").val(), $("#endTime").val());
     });
   });
 
   //----------------------------------------//
   //  Draw EVERYTHING                       //
   //----------------------------------------//
-  function draw(data, filteredClicks) {
+  function draw(data, filteredClicks, images, startTime, endTime) {
     main.selectAll(".dot").remove();
 
     var tip = d3.tip()
@@ -121,21 +109,32 @@ $(document).ready(function() {
       .offset([-10, 0])
       .html(function(d) {
         return "<strong>App:</strong> <span style='color:red'>" + data['apps'][d.app_id-1]['name'] + "</span>";
-      })
-    main.call(tip)
-
-      filteredClicks = filteredClicks.filter(function(el) {
-        return (el.time > $("#startTime").val() && el.time < $("#endTime").val());
       });
+    main.call(tip);
 
-    // data.forEach(function(d) {
-    //   d.sepalLength = +d.sepalLength;
-    //   d.sepalWidth = +d.sepalWidth;
-    // });
-    //
-    // x.domain(d3.extent(data, function(d) { return d.sepalWidth; })).nice();
-    // y.domain(d3.extent(data, function(d) { return d.sepalLength; })).nice();
+    filteredClicks = filteredClicks.filter(function(el) {
+      return (el.time > startTime && el.time < endTime);
+    });
 
+    filteredImages = images.filter(function(el) {
+      return (el.time > startTime && el.time < endTime);
+    });
+
+    var image = filteredImages[Math.round(Math.random() * filteredImages.length)]
+    svg.append("defs")
+        .append("pattern")
+        .attr("id", "image")
+        .attr('patternUnits', 'userSpaceOnUse')
+        // .attr('patternTransform', "translate(40, 20)")
+        .attr("width", max.x)
+        .attr("height", max.y)
+        .append("image")
+        .attr("xlink:href", "../assets/" + image.image)
+        .attr("width", 50)
+        .attr("height", 20)
+        .attr("x", 0)
+        .attr("y", 0);
+    console.log(scaleX(1500));
     main.append("g")
       .attr("class", "x axis")
       .attr("transform", "translate(0," + height + ")")
@@ -167,10 +166,11 @@ $(document).ready(function() {
       .attr("blahappid", function(d) {return d.app_id})
       .attr("blahtime", function(d) {return d.time})
       .style("fill", function(d) { return color(d.app_id); })
+      .style("z-index", "1")
       .on('mouseover', tip.show)
       .on('mouseout', tip.hide);
 
-    drawTimelineAxis();
+    // drawTimelineAxis();
   }
 
   // -------------------------------------------------
@@ -316,8 +316,4 @@ $(document).ready(function() {
     //if the brush is empty, redraw the timeline based on date
     if(brush.empty()){ renderTimeline();}
   }
-
-  
-
-
 });
