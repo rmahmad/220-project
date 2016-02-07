@@ -170,7 +170,7 @@ $(document).ready(function() {
       .on('mouseover', tip.show)
       .on('mouseout', tip.hide);
 
-    // drawTimelineAxis();
+    drawTimelineAxis();
   }
 
   // -------------------------------------------------
