@@ -2,9 +2,11 @@ $(document).ready(function() {
 
   // Constants
   //
-  var margin = {top: 20, right: 20, bottom: 30, left: 40},
-    width = 1800,
-    height = 600;
+  var margin = {top: 20, right: 20, bottom: 30, left: 40};
+  var width = 1800;
+  var height = 600;
+  var barHeight = 24;
+  var timelineHeight = 42;
 
   var scaleX = d3.scale.linear()
     .domain([0,3600])
@@ -31,7 +33,7 @@ $(document).ready(function() {
   //
   var main = d3.select("body").append("svg")
     .attr("width", width + margin.left + margin.right)
-    .attr("height", height + margin.top + margin.bottom + 100);
+    .attr("height", height + margin.top + margin.bottom + timelineHeight + barHeight);
 
   main.append("defs")
     .append("pattern")
@@ -58,9 +60,9 @@ $(document).ready(function() {
   // container for main compressed timeline
   //
   var timeline = main.append("g")
-    .attr("transform", "translate(" + 0 + "," + (max.y + 30) + ")")//start @ x = 0, y = 5
+    .attr("transform", "translate(" + 0 + "," + (max.y + margin.bottom) + ")")//start @ x = 0, y = 5
     .attr("width", width)
-    .attr("height", 42)
+    .attr("height", timelineHeight)
     .attr("class", "timeline");
 
   // background rectangle for compressed timeline
@@ -69,9 +71,9 @@ $(document).ready(function() {
     .attr("x", 0)
     .attr("y", 0)
     .attr("width", width)
-    .attr("height", 42)
+    .attr("height", barHeight)
     .attr('class', 'clifford')
-    .style("fill", "gray");
+    .style("fill", "pink");
 
 
   var startTime = d3.select("body").append("input").attr("id", "startTime");
@@ -80,6 +82,10 @@ $(document).ready(function() {
   var startTimeVal = 0;
   var endTimeVal = Date.now() / 1000;
 
+
+  //----------------------------------------//
+  //  Process Data                          //
+  //----------------------------------------//
   d3.json("../data/extract.json", function(error, data) {
     if (error) throw error;
 
@@ -104,6 +110,9 @@ $(document).ready(function() {
     });
   });
 
+  //----------------------------------------//
+  //  Draw EVERYTHING                       //
+  //----------------------------------------//
   function draw(data, filteredClicks) {
     main.selectAll(".dot").remove();
 
@@ -163,6 +172,54 @@ $(document).ready(function() {
 
     drawTimelineAxis();
   }
+
+  // -------------------------------------------------
+  // draw main timeline axis
+  // -------------------------------------------------
+  function drawTimelineAxis(){
+    var t1 = new Date($("#startTime").val()*1000);
+    var t2 = new Date($("#endTime").val()*1000);
+    //var t2 = new Date(t1.getTime());
+    //t2.setDate(t2.getDate() + 1);
+
+    var xScale = d3.time.scale()
+      .domain([t1, t2])
+      .range([0, width]);
+
+    var xAxis = d3.svg.axis()
+      .scale(xScale)
+      .orient("bottom");
+
+    timeline.append("g") //redraw the timeline axis
+      .attr("class", "x axis")
+      .attr("transform", "translate("+0+"," + barHeight + ")")
+      .call(xAxis)
+      .selectAll("text") //move text for tick marks
+      .attr("y", 12)
+      .attr("x", 0)
+      .style("text-anchor", "center")
+      .style("fill", "#666");
+  }
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
   // -------------------------------------------------
   // setup brush elemetns
@@ -262,33 +319,5 @@ $(document).ready(function() {
 
   
 
-  // -------------------------------------------------
-  //draw main timeline axis
-  // -------------------------------------------------
-  function drawTimelineAxis(){
-    var t1 = new Date(startTime);
-    var t2 = new Date(t1.getTime());
-    t2.setDate(t2.getDate() + 1);
-
-    var xScale = d3.time.scale()
-      .domain([t1, t2])
-      .range([0, width]);
-
-    var xAxis = d3.svg.axis()
-      .scale(xScale)
-      .orient("bottom");
-
-    d3.selectAll(".axis").remove(); //remove any existing axis
-
-    main.append("g") //redraw the timeline axis
-      .attr("class", "x axis")
-      .attr("transform", "translate("+0+"," + 12 + ")")
-      .call(xAxis)
-      .selectAll("text") //move text for tick marks
-      .attr("y", 12)
-      .attr("x", 0)
-      .style("text-anchor", "center")
-      .style("fill", "#666");
-  }
 
 });
