@@ -71,7 +71,7 @@ $(document).ready(function() {
     .attr("width", width)
     .attr("height", 42)
     .attr('class', 'clifford')
-    .style("fill", "red");
+    .style("fill", "gray");
 
 
   var startTime = d3.select("body").append("input").attr("id", "startTime");
@@ -161,7 +161,7 @@ $(document).ready(function() {
       .on('mouseover', tip.show)
       .on('mouseout', tip.hide);
 
-    //drawTimelineAxis();
+    drawTimelineAxis();
   }
 
   // -------------------------------------------------
@@ -272,7 +272,7 @@ $(document).ready(function() {
 
     var xScale = d3.time.scale()
       .domain([t1, t2])
-      .range([0, margin.width]);
+      .range([0, width]);
 
     var xAxis = d3.svg.axis()
       .scale(xScale)
