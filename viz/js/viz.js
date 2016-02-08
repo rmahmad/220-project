@@ -94,6 +94,7 @@ $(document).ready(function() {
     draw(data, filteredClicks, data['images'], min, max);
 
     drawTimeline(min, max);
+    setupBrush(min, max, data, filteredClicks, data['images']);
 
     $("#BUTTON").on("click", function() {
       draw(data, filteredClicks, data['images'], $("#startTime").val(), $("#endTime").val());
@@ -203,7 +204,6 @@ $(document).ready(function() {
 
 		cbars.exit().remove();
 
-    setupBrush(timeScale);
   }
 
   // -------------------------------------------------
@@ -235,12 +235,19 @@ $(document).ready(function() {
   // -------------------------------------------------
   // setup brush elemetns
   // -------------------------------------------------
-  function setupBrush(scale){
+  function setupBrush(timeBegin, timeEnd, data, filteredClicks, images) {
+    // Setup the scale for the brush
+    //
+    var xscale = d3.scale.linear()
+      .domain([timeBegin, timeEnd])
+      .range([0, width]);
+
     // svg brush elements
     //
     brush = d3.svg.brush()
-      .x(scale) //xscale of the brush is the x scale of the chart
-      //.on("brush", updateBrushed) //<--- on BRUSH event, only expanded timeline is redrawn
+      .x(xscale) //xscale of the brush is the x scale of the chart
+      .on("brush", function() {
+        updateBrushed(data, filteredClicks, images);}) //updateBrushed) //<--- on BRUSH event, only expanded timeline is redrawn
       //.on("brushend",brushEnd); //<-- on BRUSHEND, expanded redrawn to date frame if brush is empty
 
     var area = timeline.append("g")
@@ -250,86 +257,90 @@ $(document).ready(function() {
       .attr("y", 0)
       .attr("height", barHeight + 2);
   }
-  
-
-
-
-  
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
   // -------------------------------------------------
   // redraws plotted points based on brush
   // -------------------------------------------------
-  function updateBrushed(){
+  function updateBrushed(data, filteredClicks, images){
 
     // console.log("tryingtoupdate brush");
     minExtent = brush.extent()[0];
     maxExtent = brush.extent()[1];
 
-    //LINEAR SCALE for number of apps
-    var y = d3.scale.linear()
-      .domain([0, laneLength])
-      .range([0, laneLength * (barHeight + 2 * eBarPadding)]);
+    console.log("minExtent: " + minExtent);
+    console.log("maxExtent: " + maxExtent);
 
-    var x = d3.scale.linear()
-      .domain([timeBegin, timeEnd])
-      .range([m[3],w]);
+    draw(data, filteredClicks, images, minExtent, maxExtent);
+   // //LINEAR SCALE for number of apps
+   // var y = d3.scale.linear()
+   //   .domain([0, laneLength])
+   //   .range([0, laneLength * (barHeight + 2 * eBarPadding)]);
 
-    //scale for brushed timeline
-    var xb = d3.scale.linear()
-      .domain([minExtent, maxExtent])
-      .range([0, w]);
+   // var x = d3.scale.linear()
+   //   .domain([timeBegin, timeEnd])
+   //   .range([m[3],w]);
 
-    //get new data based on brush extents
-    filteredApps = items.filter(function (el) {
-      return (el.start <= maxExtent && el.start >= minExtent) ||
-      (el.end <= maxExtent && el.end >= minExtent);
-    });
-    console.log(" ");
-    console.log("brush filtered: " + filteredApps.length);
-    console.log("timeBegin: " + timeBegin);
-    console.log("minExtentL " + Math.round(minExtent));
-    console.log("timeEnd: " + timeEnd);
-    console.log("maxExtent: " + Math.round(maxExtent));
-    console.log("-----");
+   // //scale for brushed timeline
+   // var xb = d3.scale.linear()
+   //   .domain([minExtent, maxExtent])
+   //   .range([0, w]);
 
-    eTimeline.selectAll(".ebarContainer").remove(); //remove ebars
+   // //get new data based on brush extents
+   // filteredApps = items.filter(function (el) {
+   //   return (el.start <= maxExtent && el.start >= minExtent) ||
+   //   (el.end <= maxExtent && el.end >= minExtent);
+   // });
+   // console.log(" ");
+   // console.log("brush filtered: " + filteredApps.length);
+   // console.log("timeBegin: " + timeBegin);
+   // console.log("minExtentL " + Math.round(minExtent));
+   // console.log("timeEnd: " + timeEnd);
+   // console.log("maxExtent: " + Math.round(maxExtent));
+   // console.log("-----");
 
-    var ebars = eTimeline.append("g")
-      .attr("class","ebarContainer")
-      .selectAll(".ebar")
-      .data(filteredApps, function(d) {return d.id; });
+   // eTimeline.selectAll(".ebarContainer").remove(); //remove ebars
 
-    //draw the actual expanded timeline bars
-    ebars.enter().append("rect")
-      .attr("class","ebar")
-      .attr("y", function(d) {return y(appTimesArray.findIndex(function(v){return v[0]==d.appid})) + eBarPadding;})
-      .attr("x", function(d) {return xb(d.start);})
-      .style("fill", function(d) {return timelineColors[appTimesArray.findIndex(function(v){return v[0]==d.appid}) % 12]})
-      // .attr("width", function(d) {return x(timeBegin + d.end - d.start);}) //from original
-      .attr("width", function(d) {return ( xb(d.end) - xb(d.start)); }) //x = value of scaled(end) - scaled(start)
-      .attr("height", barHeight)
-      .on("mouseover", function(d){ barMouseover(d); })
-      .on("mousemove", function(d){ barMousemove(); })
-      .on("mouseout", function(d){ barMouseout(); });
+   // var ebars = eTimeline.append("g")
+   //   .attr("class","ebarContainer")
+   //   .selectAll(".ebar")
+   //   .data(filteredApps, function(d) {return d.id; });
 
-    //ebars.exit().remove();
+   // //draw the actual expanded timeline bars
+   // ebars.enter().append("rect")
+   //   .attr("class","ebar")
+   //   .attr("y", function(d) {return y(appTimesArray.findIndex(function(v){return v[0]==d.appid})) + eBarPadding;})
+   //   .attr("x", function(d) {return xb(d.start);})
+   //   .style("fill", function(d) {return timelineColors[appTimesArray.findIndex(function(v){return v[0]==d.appid}) % 12]})
+   //   // .attr("width", function(d) {return x(timeBegin + d.end - d.start);}) //from original
+   //   .attr("width", function(d) {return ( xb(d.end) - xb(d.start)); }) //x = value of scaled(end) - scaled(start)
+   //   .attr("height", barHeight)
+   //   .on("mouseover", function(d){ barMouseover(d); })
+   //   .on("mousemove", function(d){ barMousemove(); })
+   //   .on("mouseout", function(d){ barMouseout(); });
+
+   // //ebars.exit().remove();
   }
+  
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
   // -------------------------------------------------
   // redraws expanded if brush is empty
