@@ -269,6 +269,9 @@ $(document).ready(function() {
 
     console.log("minExtent: " + minExtent);
     console.log("maxExtent: " + maxExtent);
+    if(minExtent == maxExtent) {
+      return;
+    }
 
     draw(data, filteredClicks, images, minExtent, maxExtent);
    // //LINEAR SCALE for number of apps
