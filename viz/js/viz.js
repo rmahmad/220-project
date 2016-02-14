@@ -27,6 +27,29 @@ $(document).ready(function() {
     .orient("left");
 
   var max = {x: 1800, y: 600}
+  var tooltip = d3.select("body")
+    .append("div")
+    .attr("id", "tooltip")
+    .style("position", "absolute")
+    .style("z-index", "10")
+    .style("width","295px")
+    .style("height","295px")
+    .style("padding","2px")
+    .style("font","12px sans-serif")
+    .style("border","2px solid red")
+    .style("background", "transparent")
+    .style("visibility", "hidden");
+  var imgMaskThingVariable = tooltip.append("img").attr("id", "tooltip-image");
+  var clickDot = tooltip.append("div")
+    .attr("id", "click-dot")
+    .attr("class", "dot")
+    .style("width", "10px")
+    .style("height", "10px")
+    .style("-webkit-border-radius", "5px")
+    .style("-moz-border-radius", "5px")
+    .style("border", "1px solid black")
+    .style("position", "relative")
+    .style("background", "cyan");
 
   // Draw Containers
   //
@@ -108,14 +131,6 @@ $(document).ready(function() {
     main.selectAll(".dot").remove();
     main.selectAll(".graph-axis").remove();
 
-    var tip = d3.tip()
-      .attr('class', 'd3-tip')
-      .offset([-10, 0])
-      .html(function(d) {
-        return "<strong>App:</strong> <span style='color:red'>" + data['apps'][d.app_id-1]['name'] + "</span>";
-      });
-    main.call(tip);
-
     filteredClicks = filteredClicks.filter(function(el) {
       return (el.time > startTime && el.time < endTime);
     });
@@ -129,16 +144,14 @@ $(document).ready(function() {
         .append("pattern")
         .attr("id", "image")
         .attr('patternUnits', 'userSpaceOnUse')
-        // .attr('patternTransform', "translate(40, 20)")
         .attr("width", max.x)
         .attr("height", max.y)
         .append("image")
         .attr("xlink:href", "../assets/" + image.image)
-        .attr("width", 50)
-        .attr("height", 20)
-        .attr("x", 0)
-        .attr("y", 0);
-    console.log(scaleX(1500));
+        .attr("width", 100)
+        .attr("height", 100)
+        .attr("x", 40)
+        .attr("y", 20);
     main.append("g")
       .attr("class", "axis graph-axis")
       .attr("transform", "translate(0," + height + ")")
@@ -164,16 +177,48 @@ $(document).ready(function() {
       .attr("r", 3.5)
       .attr("cx", function(d) { return scaleX(d.x); })
       .attr("cy", function(d) { return scaleY(d.y); })
-      .attr("blahx", function(d) {return d.x})
-      .attr("blahy", function(d) {return d.y})
-      .attr("blahapp", function(d) {return data['apps'][d.app_id]['name']})
-      .attr("blahappid", function(d) {return d.app_id})
-      .attr("blahtime", function(d) {return d.time})
       .style("fill", function(d) { return color(d.app_id); })
       .style("z-index", "1")
-      .on('mouseover', tip.show)
-      .on('mouseout', tip.hide);
-
+      .on('mouseover', function(d){
+        var dot = $(this);
+        imgMaskThingVariable
+          .attr("src", function() {
+            var result = $.grep(filteredImages, function(e) {return e.time >= d.time;});
+            if(result.length >= 1) {
+              return "../assets/" + result[0].image;
+            }
+            else {
+              var result = $.grep(filteredImages, function(e) {return e.time <= d.time;});
+              return "../assets/" + result[0].image;
+            }
+          })
+          .style("top", function() {
+            return (0 - ($(this).height() - d.y - 150)) + "px";
+          })
+          .style("left", function() {
+            return (0 - (d.x - 150)) + "px";
+          })
+          .style("position", "absolute")
+          .style("clip", function() {
+            var leftClip = d.x - 150;
+            var rightClip = d.x + 150;
+            var topClip = $(this).height() - d.y - 150;
+            var bottomClip = $(this).height() - d.y + 150;
+            return "rect(" + topClip + "px, " + rightClip + "px, " + bottomClip + "px, " + leftClip + "px)";
+          });
+        tooltip.style("visibility", "visible")
+          .style("left", function() {
+            return (dot.position().left - 150)+"px"
+          })
+          .style("top", function() {
+            return (dot.position().top + 15)+"px"
+          });
+        clickDot.style("top", "150px")
+          .style("left", "150px");
+      })
+      .on('mouseout', function(d){
+        tooltip.style("visibility", "hidden");
+      });
   }
 
   //----------------------------------------//
