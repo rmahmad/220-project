@@ -322,7 +322,8 @@ $(document).ready(function() {
     console.log("minExtent: " + minExtent);
     console.log("maxExtent: " + maxExtent);
     if(minExtent == maxExtent) {
-      return;
+      minExtent = recordingEvents[currRecordingEvent]["start"]["time"]
+      maxExtent = recordingEvents[currRecordingEvent]["end"]["time"]
     }
 
     draw(data, filteredClicks, images, minExtent, maxExtent);
@@ -342,5 +343,10 @@ $(document).ready(function() {
     max = recordingEvents[currRecordingEvent]["end"]["time"]
 
     draw(data, filteredClicks, data["images"], min, max);
+    timeline.selectAll(".cbar").remove()
+    timeline.selectAll(".brush").remove()
+    timeline.selectAll(".time.axis").remove()
+    drawTimeline(min, max);
+    setupBrush(min, max, data, filteredClicks, data["images"]);
   });
 });
