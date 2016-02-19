@@ -3,10 +3,11 @@ $(document).ready(function() {
   // Constants
   //
   var margin = {top: 20, right: 20, bottom: 30, left: 40};
-  var width = 1000;
+  var width = $("#content").width() - margin.right - margin.left;
   var height = 600;
   var barHeight = 24;
   var timelineHeight = 42;
+  var data;
 
   var scaleX = d3.scale.linear()
     .domain([0,3600])
@@ -26,22 +27,21 @@ $(document).ready(function() {
     .scale(scaleY)
     .orient("left");
 
-  var tooltip = d3.select("body")
+  var tooltip = d3.select("#content")
     .append("div")
     .attr("id", "tooltip")
     .style("position", "absolute")
     .style("z-index", "10")
-    .style("width","296px")
-    .style("height","326px")
+    .style("width","300px")
+    .style("height","330px")
     .style("font","12px sans-serif")
     .style("border","2px solid red")
     .style("background", "black")
     .style("visibility", "hidden");
   var tooltipText = tooltip.append("div")
     .style("padding-top", "7px")
-    .style("color", "white")
     .style("text-align", "center")
-    .style("height", "22px")
+    .style("height", "30px")
     .style("border-bottom", "1px solid red");
   var imgMaskThingVariable = tooltip.append("img").attr("id", "tooltip-image");
   var clickDot = tooltip.append("div")
@@ -57,7 +57,7 @@ $(document).ready(function() {
 
   // Draw Containers
   //
-  var svg = d3.select("body").append("svg")
+  var svg = d3.select("#content").append("svg")
     .attr("width", width + margin.left + margin.right)
     .attr("height", height + margin.top + margin.bottom + timelineHeight + barHeight);
 
@@ -90,51 +90,44 @@ $(document).ready(function() {
     .attr('class', 'clifford')
     .style("fill", "pink");
 
-  var startTimeVal = 0;
-  var endTimeVal = Date.now() / 1000;
+  var recordingEvents = []
+  var currRecordingEvent
 
 
   //----------------------------------------//
   //  Process Data                          //
   //----------------------------------------//
-  d3.json("../data/extract.json", function(error, data) {
+  d3.json("../data/extract.json", function(error, json) {
     if (error) throw error;
+    data = json;
 
-    lastStop = 0;
-    lastStart = 0;
-    stopEvents = data['recordings'].filter(function(el) {
-      if(el.event === "Exit" || el.event === "Sleep" || el.event === "Pause") {
-        if(lastStop < el.time)
-          lastStop = el.time;
-        return true;
-      }
-    });
-    startEvents = data['recordings'].filter(function(el) {
+    for(var i = 0; i < data["recordings"].length; i++) {
+      var el = data["recordings"][i];
       if(el.event === "Start" || el.event === "Wake" || el.event === "Unpause") {
-        if(lastStart < el.time && lastStart < lastStop)
-          lastStart = el.time;
-        return true;
+        var start = el;
+        for(; i < data["recordings"].length; i++) {
+          var el = data["recordings"][i];
+          if(el.event === "Exit" || el.event === "Sleep" || el.event === "Pause") {
+            recordingEvents.push({"start": start, "end": el});
+            break;
+          }
+        }
       }
-    });
+    }
 
     var min = Date.now() / 1000;
     var max = 0
-    filteredClicks = data['clicks'].filter(function(el) {
-      if(el.time < min) {
-        min = el.time;
-      }
-      if(el.time > max) {
-        max = el.time
-      }
+    filteredClicks = data["clicks"].filter(function(el) {
       return (el.x >= 0 && el.y >= 0);
     });
-    min = lastStart
-    max = lastStop
+    currRecordingEvent = recordingEvents.length-1
+    min = recordingEvents[currRecordingEvent]["start"]["time"]
+    max = recordingEvents[currRecordingEvent]["end"]["time"]
 
-    draw(data, filteredClicks, data['images'], min, max);
+    draw(data, filteredClicks, data["images"], min, max);
 
     drawTimeline(min, max);
-    setupBrush(min, max, data, filteredClicks, data['images']);
+    setupBrush(min, max, data, filteredClicks, data["images"]);
   });
 
   //----------------------------------------//
@@ -156,7 +149,7 @@ $(document).ready(function() {
     svg.append("defs")
         .append("pattern")
         .attr("id", "image")
-        .attr('patternUnits', 'userSpaceOnUse')
+        .attr("patternUnits", "userSpaceOnUse")
         .attr("width", width)
         .attr("height", height)
         .append("image")
@@ -228,7 +221,7 @@ $(document).ready(function() {
           });
         clickDot.style("top", "140px")
           .style("left", "140px");
-          tooltipText.html("<strong>App: <span style='color: red;'>" + data['apps'][d.app_id-1]['name'] + "</span></strong>");
+          tooltipText.html("<strong style='color: white;'>App: <span style='color: red;'>" + data['apps'][d.app_id-1]['name'] + "</span></strong>");
       })
       .on('mouseout', function(d){
         tooltip.style("visibility", "hidden");
@@ -342,4 +335,12 @@ $(document).ready(function() {
     //if the brush is empty, redraw the timeline based on date
     if(brush.empty()){ renderTimeline();}
   }
+
+  $(".recording-nav").click(function() {
+    currRecordingEvent = $(this).attr("id") === "prev" ? currRecordingEvent - 1 : currRecordingEvent + 1;
+    min = recordingEvents[currRecordingEvent]["start"]["time"]
+    max = recordingEvents[currRecordingEvent]["end"]["time"]
+
+    draw(data, filteredClicks, data["images"], min, max);
+  });
 });

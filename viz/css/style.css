@@ -1,5 +1,11 @@
 body {
   font: 10px sans-serif;
+  margin-top: 20px;
+}
+
+img {
+  max-width: none;
+  max-height: none;
 }
 
 .axis path,
@@ -48,4 +54,16 @@ body {
   fill: #f00;
   fill-opacity: .25;
   shape-rendering: crispEdges;
+}
+
+.recording-nav {
+  text-align: center;
+  padding-top: 15%;
+  font-size: 50px;
+  font-family: 'Roboto Condensed', sans-serif;
+}
+
+.recording-nav:hover {
+  background: #EEEEEE;
+  cursor: pointer;
 }
