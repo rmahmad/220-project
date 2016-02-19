@@ -41,6 +41,7 @@ with con:
   move = [] #list of moves
   scroll = [] #list of scrolls
   keys = [] #list of key events
+  recordings = [] #list of recording events
 
   cur = con.cursor()
 
@@ -53,6 +54,7 @@ with con:
   clickSQL = "SELECT * FROM click"
   moveSQL = "SELECT * FROM move"
   scrollSQL = "SELECT * FROM scroll"
+  recordingsSQL = "SELECT * FROM recordingevent"
 
   #GET list of applications
   cur.execute(appsSQL)
@@ -146,6 +148,16 @@ with con:
     a['app_id'] = row[4]
     a['window_id'] = row[5]
     clicks.append(a)
+
+  #GET list of recording events
+  cur.execute(recordingsSQL)
+  rows = cur.fetchall()
+  for row in rows:
+    a = collections.OrderedDict()
+    a['id'] = row[0]
+    a['time'] = row[1]
+    a['event'] = row[2]
+    recordings.append(a)
 
   #GET list of screenshots
   image_dir = os.path.expanduser('~/.traces/screenshots')  #looks for db under ~/.traces
@@ -243,6 +255,7 @@ with con:
   d['images']=images
   d['words']=words
   d['clicks']=clicks
+  d['recordings']=recordings
   data = d
   #print json.dumps(data)
   #WRITE file

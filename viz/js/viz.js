@@ -3,18 +3,18 @@ $(document).ready(function() {
   // Constants
   //
   var margin = {top: 20, right: 20, bottom: 30, left: 40};
-  var width = 1800;
+  var width = 1000;
   var height = 600;
   var barHeight = 24;
   var timelineHeight = 42;
 
   var scaleX = d3.scale.linear()
     .domain([0,3600])
-    .range([0, 1800]);
+    .range([0, width]);
 
   var scaleY = d3.scale.linear()
     .domain([0,1500])
-    .range([600, 0]);
+    .range([height, 0]);
 
   var color = d3.scale.category10();
 
@@ -26,19 +26,23 @@ $(document).ready(function() {
     .scale(scaleY)
     .orient("left");
 
-  var max = {x: 1800, y: 600}
   var tooltip = d3.select("body")
     .append("div")
     .attr("id", "tooltip")
     .style("position", "absolute")
     .style("z-index", "10")
-    .style("width","295px")
-    .style("height","295px")
-    .style("padding","2px")
+    .style("width","296px")
+    .style("height","326px")
     .style("font","12px sans-serif")
     .style("border","2px solid red")
-    .style("background", "transparent")
+    .style("background", "black")
     .style("visibility", "hidden");
+  var tooltipText = tooltip.append("div")
+    .style("padding-top", "7px")
+    .style("color", "white")
+    .style("text-align", "center")
+    .style("height", "22px")
+    .style("border-bottom", "1px solid red");
   var imgMaskThingVariable = tooltip.append("img").attr("id", "tooltip-image");
   var clickDot = tooltip.append("div")
     .attr("id", "click-dot")
@@ -60,8 +64,8 @@ $(document).ready(function() {
   svg.append("rect")
       .attr("x", "40")
       .attr("y", "20")
-      .attr("width", max.x)
-      .attr("height", max.y)
+      .attr("width", width)
+      .attr("height", height)
       .attr("fill", "url(#image)");
 
   main = svg.append("g")
@@ -71,7 +75,7 @@ $(document).ready(function() {
   // container for main compressed timeline
   //
   var timeline = main.append("g")
-    .attr("transform", "translate(" + 0 + "," + (max.y + margin.bottom) + ")")//start @ x = 0, y = 5
+    .attr("transform", "translate(" + 0 + "," + (height + margin.bottom) + ")")//start @ x = 0, y = 5
     .attr("width", width)
     .attr("height", timelineHeight)
     .attr("class", "timeline");
@@ -86,10 +90,6 @@ $(document).ready(function() {
     .attr('class', 'clifford')
     .style("fill", "pink");
 
-
-  var startTime = d3.select("body").append("input").attr("id", "startTime");
-  var endTime = d3.select("body").append("input").attr("id", "endTime");
-  var button = d3.select("body").append("button").attr("id", "BUTTON").text("CLICK ME");
   var startTimeVal = 0;
   var endTimeVal = Date.now() / 1000;
 
@@ -99,6 +99,23 @@ $(document).ready(function() {
   //----------------------------------------//
   d3.json("../data/extract.json", function(error, data) {
     if (error) throw error;
+
+    lastStop = 0;
+    lastStart = 0;
+    stopEvents = data['recordings'].filter(function(el) {
+      if(el.event === "Exit" || el.event === "Sleep" || el.event === "Pause") {
+        if(lastStop < el.time)
+          lastStop = el.time;
+        return true;
+      }
+    });
+    startEvents = data['recordings'].filter(function(el) {
+      if(el.event === "Start" || el.event === "Wake" || el.event === "Unpause") {
+        if(lastStart < el.time && lastStart < lastStop)
+          lastStart = el.time;
+        return true;
+      }
+    });
 
     var min = Date.now() / 1000;
     var max = 0
@@ -111,17 +128,13 @@ $(document).ready(function() {
       }
       return (el.x >= 0 && el.y >= 0);
     });
-    $("#startTime").val(Math.floor(min));
-    $("#endTime").val(Math.ceil(max));
+    min = lastStart
+    max = lastStop
 
     draw(data, filteredClicks, data['images'], min, max);
 
     drawTimeline(min, max);
     setupBrush(min, max, data, filteredClicks, data['images']);
-
-    $("#BUTTON").on("click", function() {
-      draw(data, filteredClicks, data['images'], $("#startTime").val(), $("#endTime").val());
-    });
   });
 
   //----------------------------------------//
@@ -144,8 +157,8 @@ $(document).ready(function() {
         .append("pattern")
         .attr("id", "image")
         .attr('patternUnits', 'userSpaceOnUse')
-        .attr("width", max.x)
-        .attr("height", max.y)
+        .attr("width", width)
+        .attr("height", height)
         .append("image")
         .attr("xlink:href", "../assets/" + image.image)
         .attr("width", 100)
@@ -193,7 +206,7 @@ $(document).ready(function() {
             }
           })
           .style("top", function() {
-            return (0 - ($(this).height() - d.y - 150)) + "px";
+            return (30 - ($(this).height() - d.y - 150)) + "px";
           })
           .style("left", function() {
             return (0 - (d.x - 150)) + "px";
@@ -201,9 +214,9 @@ $(document).ready(function() {
           .style("position", "absolute")
           .style("clip", function() {
             var leftClip = d.x - 150;
-            var rightClip = d.x + 150;
+            var rightClip = d.x + 146;
             var topClip = $(this).height() - d.y - 150;
-            var bottomClip = $(this).height() - d.y + 150;
+            var bottomClip = $(this).height() - d.y + 146;
             return "rect(" + topClip + "px, " + rightClip + "px, " + bottomClip + "px, " + leftClip + "px)";
           });
         tooltip.style("visibility", "visible")
@@ -213,8 +226,9 @@ $(document).ready(function() {
           .style("top", function() {
             return (dot.position().top + 15)+"px"
           });
-        clickDot.style("top", "150px")
-          .style("left", "150px");
+        clickDot.style("top", "140px")
+          .style("left", "140px");
+          tooltipText.html("<strong>App: <span style='color: red;'>" + data['apps'][d.app_id-1]['name'] + "</span></strong>");
       })
       .on('mouseout', function(d){
         tooltip.style("visibility", "hidden");
@@ -319,76 +333,7 @@ $(document).ready(function() {
     }
 
     draw(data, filteredClicks, images, minExtent, maxExtent);
-   // //LINEAR SCALE for number of apps
-   // var y = d3.scale.linear()
-   //   .domain([0, laneLength])
-   //   .range([0, laneLength * (barHeight + 2 * eBarPadding)]);
-
-   // var x = d3.scale.linear()
-   //   .domain([timeBegin, timeEnd])
-   //   .range([m[3],w]);
-
-   // //scale for brushed timeline
-   // var xb = d3.scale.linear()
-   //   .domain([minExtent, maxExtent])
-   //   .range([0, w]);
-
-   // //get new data based on brush extents
-   // filteredApps = items.filter(function (el) {
-   //   return (el.start <= maxExtent && el.start >= minExtent) ||
-   //   (el.end <= maxExtent && el.end >= minExtent);
-   // });
-   // console.log(" ");
-   // console.log("brush filtered: " + filteredApps.length);
-   // console.log("timeBegin: " + timeBegin);
-   // console.log("minExtentL " + Math.round(minExtent));
-   // console.log("timeEnd: " + timeEnd);
-   // console.log("maxExtent: " + Math.round(maxExtent));
-   // console.log("-----");
-
-   // eTimeline.selectAll(".ebarContainer").remove(); //remove ebars
-
-   // var ebars = eTimeline.append("g")
-   //   .attr("class","ebarContainer")
-   //   .selectAll(".ebar")
-   //   .data(filteredApps, function(d) {return d.id; });
-
-   // //draw the actual expanded timeline bars
-   // ebars.enter().append("rect")
-   //   .attr("class","ebar")
-   //   .attr("y", function(d) {return y(appTimesArray.findIndex(function(v){return v[0]==d.appid})) + eBarPadding;})
-   //   .attr("x", function(d) {return xb(d.start);})
-   //   .style("fill", function(d) {return timelineColors[appTimesArray.findIndex(function(v){return v[0]==d.appid}) % 12]})
-   //   // .attr("width", function(d) {return x(timeBegin + d.end - d.start);}) //from original
-   //   .attr("width", function(d) {return ( xb(d.end) - xb(d.start)); }) //x = value of scaled(end) - scaled(start)
-   //   .attr("height", barHeight)
-   //   .on("mouseover", function(d){ barMouseover(d); })
-   //   .on("mousemove", function(d){ barMousemove(); })
-   //   .on("mouseout", function(d){ barMouseout(); });
-
-   // //ebars.exit().remove();
   }
-  
-
-
-
-  
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
   // -------------------------------------------------
   // redraws expanded if brush is empty
