@@ -67,3 +67,12 @@ img {
   background: #EEEEEE;
   cursor: pointer;
 }
+
+.app-filter {
+  font-size: 1.25em;
+  padding: 0 10px 0 10px;
+}
+
+.selected {
+  font-weight: bold;
+}
