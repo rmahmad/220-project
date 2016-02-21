@@ -142,7 +142,6 @@ $(document).ready(function() {
     //
     var selectedApp = $(".selected").attr("app_id");
 
-    console.log(selectedApp);
     filteredClicks = filteredClicks.filter(function(el) {
       return ((selectedApp === undefined || el.app_id == selectedApp) && 
               el.time > startTime && el.time < endTime);
@@ -152,6 +151,7 @@ $(document).ready(function() {
       return (el.time > startTime && el.time < endTime);
     });
 
+    try {
     var image = filteredImages[Math.round(Math.random() * filteredImages.length)]
     svg.append("defs")
         .append("pattern")
@@ -173,6 +173,10 @@ $(document).ready(function() {
       .attr("class", "label")
       .attr("x", width)
       .attr("y", -6);
+    }
+    catch(e) {
+      console.log(e);
+    }
 
     main.append("g")
       .attr("class", "axis graph-axis")
@@ -343,12 +347,9 @@ $(document).ready(function() {
   // -------------------------------------------------
   function updateBrushed(data, filteredClicks, images){
 
-    // console.log("tryingtoupdate brush");
     minExtent = brush.extent()[0];
     maxExtent = brush.extent()[1];
 
-    console.log("minExtent: " + minExtent);
-    console.log("maxExtent: " + maxExtent);
     if(minExtent == maxExtent) {
       minExtent = recordingEvents[currRecordingEvent]["start"]["time"]
       maxExtent = recordingEvents[currRecordingEvent]["end"]["time"]

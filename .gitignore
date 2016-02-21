@@ -1,5 +1,6 @@
 contributors.txt
 data/*
+*extract.json
 *.swp
 *.DS_Store
 assets/screenshots
