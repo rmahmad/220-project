@@ -71,6 +71,12 @@ img {
 .app-filter {
   font-size: 1.25em;
   padding: 0 10px 0 10px;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+}
+
+.app-filter:hover {
+  cursor: pointer;
 }
 
 .selected {

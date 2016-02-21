@@ -8,6 +8,7 @@ $(document).ready(function() {
   var barHeight = 24;
   var timelineHeight = 42;
   var data;
+  var min, max;
 
   var scaleX = d3.scale.linear()
     .domain([0,3600])
@@ -115,8 +116,8 @@ $(document).ready(function() {
       }
     }
 
-    var min = Date.now() / 1000;
-    var max = 0
+    min = Date.now() / 1000;
+    max = 0
     filteredClicks = data["clicks"].filter(function(el) {
       return (el.x >= 0 && el.y >= 0);
     });
@@ -126,7 +127,7 @@ $(document).ready(function() {
 
     draw(data, filteredClicks, data["images"], min, max);
 
-    drawTimeline(min, max);
+    drawTimeline(data, min, max);
     setupBrush(min, max, data, filteredClicks, data["images"]);
   });
 
@@ -137,8 +138,14 @@ $(document).ready(function() {
     main.selectAll(".dot").remove();
     main.selectAll(".graph-axis").remove();
 
+    // Get selected App
+    //
+    var selectedApp = $(".selected").attr("app_id");
+
+    console.log(selectedApp);
     filteredClicks = filteredClicks.filter(function(el) {
-      return (el.time > startTime && el.time < endTime);
+      return ((selectedApp === undefined || el.app_id == selectedApp) && 
+              el.time > startTime && el.time < endTime);
     });
 
     filteredImages = images.filter(function(el) {
@@ -231,8 +238,14 @@ $(document).ready(function() {
   //----------------------------------------//
   //  Draw the Timeline with BARS           //
   //----------------------------------------//
-  function drawTimeline(timeBegin, timeEnd) {
+  function drawTimeline(data, timeBegin, timeEnd) {
+    timeline.selectAll(".cbar").remove()
+    timeline.selectAll(".brush").remove()
     drawTimelineAxis(timeBegin, timeEnd);
+
+    var tmpClicks = filteredClicks.filter(function(el) {
+      return (el.time > timeBegin && el.time < timeEnd);
+    });
 
     var timeScale = d3.scale.linear()
       .domain([timeBegin, timeEnd])
@@ -241,7 +254,7 @@ $(document).ready(function() {
     //timeline.selectAll("g").remove();
 
 		cbars = timeline.append("g").selectAll(".cbar")
-			.data(filteredClicks);
+			.data(tmpClicks);
 
 		cbars.enter().append("rect")
 			.attr("class", 'cbar')
@@ -256,12 +269,27 @@ $(document).ready(function() {
 
 		cbars.exit().remove();
 
+    // Get the active apps during this time window
+    //
+    var filteredApps = new Set();
+    tmpClicks.forEach(function(d) {
+      if (d.app_id > 0) {
+        filteredApps.add(data['apps'][d.app_id-1])
+      }
+    });
+
+    d3.selectAll(".app-filter").remove();
+    filteredApps.forEach(function(d) {
+      $("#app-list").append("<span app_id='" + d.id + "' class='app-filter'>" + d.name + "</span>");
+    });
+
   }
 
   // -------------------------------------------------
   // draw main timeline axis
   // -------------------------------------------------
   function drawTimelineAxis(min, max) {
+    timeline.selectAll(".time.axis").remove()
     var t1 = new Date(min*1000);
     var t2 = new Date(max*1000);
 
@@ -343,10 +371,17 @@ $(document).ready(function() {
     max = recordingEvents[currRecordingEvent]["end"]["time"]
 
     draw(data, filteredClicks, data["images"], min, max);
-    timeline.selectAll(".cbar").remove()
-    timeline.selectAll(".brush").remove()
-    timeline.selectAll(".time.axis").remove()
-    drawTimeline(min, max);
+    drawTimeline(data, min, max);
     setupBrush(min, max, data, filteredClicks, data["images"]);
+  });
+
+  $(".content").on("click", ".app-filter", function() {
+    if ($(this).hasClass("selected")) {
+      $(".selected").removeClass("selected");
+    } else {
+      $(".selected").removeClass("selected");
+      $(this).addClass("selected");
+    }
+    draw(data,filteredClicks, data["images"], min, max);
   });
 });
