@@ -370,6 +370,8 @@ $(document).ready(function() {
     min = recordingEvents[currRecordingEvent]["start"]["time"]
     max = recordingEvents[currRecordingEvent]["end"]["time"]
 
+    $(".selected").removeClass("selected");
+
     draw(data, filteredClicks, data["images"], min, max);
     drawTimeline(data, min, max);
     setupBrush(min, max, data, filteredClicks, data["images"]);
