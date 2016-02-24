@@ -2,7 +2,6 @@ $(document).ready(function() {
 
   // Constants
   //
-  //
   var margin = {top: 20, right: 20, bottom: 30, left: 40};
   var width = $("#content").width() - margin.right - margin.left;
   var height = 600;
