@@ -137,6 +137,7 @@ $(document).ready(function() {
   function draw(data, filteredClicks, images, startTime, endTime) {
     main.selectAll(".dot").remove();
     main.selectAll(".graph-axis").remove();
+    svg.selectAll("defs").remove();
 
     // Get selected App
     //
@@ -161,8 +162,8 @@ $(document).ready(function() {
         .attr("height", height)
         .append("image")
         .attr("xlink:href", "../assets/" + image.image)
-        .attr("width", 100)
-        .attr("height", 100)
+        .attr("width", width)
+        .attr("height", height)
         .attr("x", 40)
         .attr("y", 20);
     main.append("g")
