@@ -5,17 +5,19 @@ $(document).ready(function() {
   var margin = {top: 20, right: 20, bottom: 30, left: 40};
   var width = $("#content").width() - margin.right - margin.left;
   var height = 600;
+  var domainX = 3600;
+  var domainY = 1500;
   var barHeight = 24;
   var timelineHeight = 42;
   var data;
   var min, max;
 
   var scaleX = d3.scale.linear()
-    .domain([0,3600])
+    .domain([0,domainX])
     .range([0, width]);
 
   var scaleY = d3.scale.linear()
-    .domain([0,1500])
+    .domain([0,domainY])
     .range([height, 0]);
 
   var color = d3.scale.category10();
@@ -153,27 +155,33 @@ $(document).ready(function() {
     });
 
     try {
-    var image = filteredImages[Math.round(Math.random() * filteredImages.length)]
-    svg.append("defs")
-        .append("pattern")
-        .attr("id", "image")
-        .attr("patternUnits", "userSpaceOnUse")
-        .attr("width", width)
-        .attr("height", height)
-        .append("image")
-        .attr("xlink:href", "../assets/" + image.image)
-        .attr("width", width)
-        .attr("height", height)
-        .attr("x", 40)
-        .attr("y", 20);
-    main.append("g")
-      .attr("class", "axis graph-axis")
-      .attr("transform", "translate(0," + height + ")")
-      .call(xAxis)
-      .append("text")
-      .attr("class", "label")
-      .attr("x", width)
-      .attr("y", -6);
+        var image = filteredImages[Math.round(Math.random() * filteredImages.length)];
+        image.size[0] = image.size[0] == 2304 ? image.size[0] - 624 : image.size[0] - 880;
+        image.size[1] = image.size[1] - 240;
+        svg.append("defs")
+            .append("pattern")
+            .attr("id", "image")
+            .attr("patternUnits", "userSpaceOnUse")
+            .attr("width", width+40)
+            .attr("height", height+20)
+            .append("svg")
+            .attr("width", function() { return width*image.size[0]/domainX; })
+            .attr("height", function() { return height*image.size[1]/domainY; })
+            .attr("y", function() { return 20 + (height-(height*image.size[1]/domainY)); })
+            .attr("x", 40)
+            .append("image")
+            .attr("xlink:href", "../assets/" + image.image)
+            .attr("width", "100%")
+            .attr("height", "100%")
+            .attr("preserveAspectRatio", "none");
+        main.append("g")
+          .attr("class", "axis graph-axis")
+          .attr("transform", "translate(0," + height + ")")
+          .call(xAxis)
+          .append("text")
+          .attr("class", "label")
+          .attr("x", width)
+          .attr("y", -6);
     }
     catch(e) {
       console.log(e);
@@ -285,7 +293,7 @@ $(document).ready(function() {
 
     d3.selectAll(".app-filter").remove();
     filteredApps.forEach(function(d) {
-      $("#app-list").append("<span app_id='" + d.id + "' class='app-filter'>" + d.name + "</span>");
+      $("#app-list").append("<span app_id='" + d.id + "' class='app-filter'><a>" + d.name + "</a></span>");
     });
 
   }
