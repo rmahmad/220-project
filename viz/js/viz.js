@@ -5,7 +5,7 @@ $(document).ready(function() {
   var margin = {top: 20, right: 20, bottom: 30, left: 40};
   var width = $("#content").width() - margin.right - margin.left;
   var height = 600;
-  var domainX = 3600;
+  var domainX = 4500;
   var domainY = 1500;
   var barHeight = 24;
   var timelineHeight = 42;
@@ -147,17 +147,15 @@ $(document).ready(function() {
 
     filteredClicks = filteredClicks.filter(function(el) {
       return ((selectedApp === undefined || el.app_id == selectedApp) && 
-              el.time > startTime && el.time < endTime);
+              el.time > startTime && el.time < endTime && el.x > 12);
     });
 
     filteredImages = images.filter(function(el) {
       return (el.time > startTime && el.time < endTime);
     });
 
+    var image = filteredImages[Math.round(Math.random() * filteredImages.length)];
     try {
-        var image = filteredImages[Math.round(Math.random() * filteredImages.length)];
-        image.size[0] = image.size[0] == 2304 ? image.size[0] - 624 : image.size[0] - 880;
-        image.size[1] = image.size[1] - 240;
         svg.append("defs")
             .append("pattern")
             .attr("id", "image")
@@ -201,35 +199,58 @@ $(document).ready(function() {
       .enter().append("svg:circle")
       .attr("class", "dot")
       .attr("r", 3.5)
-      .attr("cx", function(d) { return scaleX(d.x); })
-      .attr("cy", function(d) { return scaleY(d.y); })
+      .attr("cx", function(d) {
+        if(d.x < 2304) {
+          return scaleX(d.x + (624 * d.x / 1680));
+        }
+        else {
+          return scaleX(d.x + (624 + (256 * d.x / 1680)));
+        }
+      })
+      .attr("cy", function(d) { return scaleY(d.y + (400 * d.y / 1200)); })
+      .attr("blahx", function(d) { return d.x; })
+      .attr("blahy", function(d) { return d.y; })
       .style("fill", function(d) { return color(d.app_id); })
       .style("z-index", "1")
       .on('mouseover', function(d){
+        var tmpX = d.x;
+        var tmpY = d.y + (400 * d.y / 1200);
         var dot = $(this);
         imgMaskThingVariable
           .attr("src", function() {
             var result = $.grep(filteredImages, function(e) {return e.time >= d.time;});
             if(result.length >= 1) {
+              if(tmpX < 2304) {
+                tmpX = tmpX + (624 * tmpX / 1680);
+              }
+              else {
+                tmpX = tmpX + (624 + (256 * tmpX / 1680));
+              }
               return "../assets/" + result[0].image;
             }
             else {
               var result = $.grep(filteredImages, function(e) {return e.time <= d.time;});
-              return "../assets/" + result[0].image;
+              if(tmpX < 2304) {
+                tmpX = tmpX + (624 * tmpX / 1680);
+              }
+              else {
+                tmpX = tmpX + (624 + (256 * tmpX / 1680));
+              }
+              return "../assets/" + result[result.length-1].image;
             }
           })
           .style("top", function() {
-            return (30 - ($(this).height() - d.y - 150)) + "px";
+            return (30 - ($(this).height() - tmpY - 150)) + "px";
           })
           .style("left", function() {
-            return (0 - (d.x - 150)) + "px";
+            return (0 - (tmpX - 150)) + "px";
           })
           .style("position", "absolute")
           .style("clip", function() {
-            var leftClip = d.x - 150;
-            var rightClip = d.x + 146;
-            var topClip = $(this).height() - d.y - 150;
-            var bottomClip = $(this).height() - d.y + 146;
+            var leftClip = tmpX - 150;
+            var rightClip = tmpX + 146;
+            var topClip = $(this).height() - tmpY - 150;
+            var bottomClip = $(this).height() - tmpY + 146;
             return "rect(" + topClip + "px, " + rightClip + "px, " + bottomClip + "px, " + leftClip + "px)";
           });
         tooltip.style("visibility", "visible")
