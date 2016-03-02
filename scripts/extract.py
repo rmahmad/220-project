@@ -255,6 +255,7 @@ with con:
   d['images']=images
   d['words']=words
   d['clicks']=clicks
+  d['move']=move
   d['recordings']=recordings
   data = d
   #print json.dumps(data)

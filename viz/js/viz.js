@@ -139,22 +139,38 @@ $(document).ready(function() {
   function draw(data, filteredClicks, images, startTime, endTime) {
     main.selectAll(".dot").remove();
     main.selectAll(".graph-axis").remove();
+    main.selectAll("polyline").remove();
     svg.selectAll("defs").remove();
 
     // Get selected App
     //
-    var selectedApp = $(".selected").attr("app_id");
+    var selectedApp = $(".app-filter.selected").attr("app_id");
 
     filteredClicks = filteredClicks.filter(function(el) {
       return ((selectedApp === undefined || el.app_id == selectedApp) && 
               el.time > startTime && el.time < endTime && el.x > 12);
     });
 
+    filteredMoves = data['move'].filter(function(el) {
+      return (el.time > startTime && el.time < endTime);
+    });
+
     filteredImages = images.filter(function(el) {
       return (el.time > startTime && el.time < endTime);
     });
 
-    var image = filteredImages[Math.round(Math.random() * filteredImages.length)];
+    var image;
+    if(!selectedApp) {
+      image = filteredImages[Math.round(Math.random() * filteredImages.length)];
+    }
+    else {
+      try {
+        image = $.grep(filteredImages, function(e) {return e.time >= filteredClicks[0].time;})[0];
+      }
+      catch(e) {
+        image = filteredImages[Math.round(Math.random() * filteredImages.length)];
+      }
+    }
     try {
         svg.append("defs")
             .append("pattern")
@@ -193,6 +209,30 @@ $(document).ready(function() {
       .attr("transform", "rotate(-90)")
       .attr("y", 6)
       .attr("dy", ".71em");
+
+    if($("#move-toggle").attr("toggle") === "1") {
+      main.append("polyline")
+        .attr("fill", "none")
+        .attr("stroke", "cyan")
+        .attr("stroke-width", "2")
+        .attr("opacity", "0.5")
+        .attr("points", function() {
+          pointString = "";
+          filteredMoves.forEach(function(el) {
+            var tmpX;
+            var tmpY;
+            if(el.x < 2304) {
+              tmpX = scaleX(el.x + (624 * el.x / 1680));
+            }
+            else {
+              tmpX = scaleX(el.x + (624 + (256 * el.x / 1680)));
+            }
+            tmpY = scaleY(el.y + (400 * el.y / 1200));
+            pointString += tmpX + "," + tmpY + " ";
+          })
+          return pointString;
+        });
+    }
 
     main.selectAll(".dot")
       .data(filteredClicks)
@@ -401,7 +441,7 @@ $(document).ready(function() {
     min = recordingEvents[currRecordingEvent]["start"]["time"]
     max = recordingEvents[currRecordingEvent]["end"]["time"]
 
-    $(".selected").removeClass("selected");
+    $(".app-filter.selected").removeClass("selected");
 
     draw(data, filteredClicks, data["images"], min, max);
     drawTimeline(data, min, max);
@@ -410,9 +450,21 @@ $(document).ready(function() {
 
   $(".content").on("click", ".app-filter", function() {
     if ($(this).hasClass("selected")) {
-      $(".selected").removeClass("selected");
+      $(".app-filter.selected").removeClass("selected");
     } else {
-      $(".selected").removeClass("selected");
+      $(".app-filter.selected").removeClass("selected");
+      $(this).addClass("selected");
+    }
+    draw(data,filteredClicks, data["images"], min, max);
+  });
+
+  $("#move-toggle").click(function() {
+    if($(this).attr("toggle") === "1") {
+      $(this).attr("toggle", 0);
+      $(this).removeClass("selected");
+    }
+    else {
+      $(this).attr("toggle", 1);
       $(this).addClass("selected");
     }
     draw(data,filteredClicks, data["images"], min, max);
